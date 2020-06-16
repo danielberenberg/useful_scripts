@@ -88,6 +88,8 @@ def fasta_reader(handle, width=None, strip_prefix=False):
         :None
     """
     FASTA_STOP_CODON = "*"
+    FASTA_START_CHAR = ">"
+
     import io, textwrap, itertools
 
     handle = handle if isinstance(handle, io.TextIOWrapper) else open(handle, 'r')
@@ -96,6 +98,8 @@ def fasta_reader(handle, width=None, strip_prefix=False):
         for is_header, group in itertools.groupby(handle, lambda line: line.startswith(">")):
             if is_header:
                 header = group.__next__().strip()
+                if strip_prefix:
+                    header = header.lstrip(FASTA_START_CHAR)
             else:
                 seq    = ''.join(line.strip() for line in group).strip().rstrip(FASTA_STOP_CODON)
                 if width is not None:
