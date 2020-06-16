@@ -5,15 +5,11 @@
 Split or filter a FASTA file 
 """
 
-import io
 import re
 import sys
 import pathlib
-import secrets 
 import operator
 import argparse
-import textwrap
-import itertools
 
 clear = f"\r{100 * ' '}\r"
 FASTA_STOP_CODON = '*'
@@ -110,6 +106,8 @@ def fasta_reader(handle, width=None, strip_prefix=False):
             handle.close()
 
 if __name__ == "__main__":
+    import itertools
+
     args = arguments()
     spliterator = fasta_reader(args.i)
     if not args.allow_stop_codons:
