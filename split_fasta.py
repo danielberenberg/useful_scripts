@@ -38,15 +38,15 @@ def _construct_conditional(conditions):
         evaluated = [op(X, operand) for op, operand in zip(operations, operands)]
         return all(evaluated)
 
-    #condition_chain = "AND ".join(f"(x {po} {operand}) " for po, operand in zip(operators, operands))
-    #for op, operand, po in zip(operations, operands, operators):
-    #    print(f"{operand + 1} {po} {operand} = {op(operand + 1, operand)}")
-    #    print(f"{operand - 1} {po} {operand} = {op(operand - 1, operand)}")
-    #    print(f"{operand} {po} {operand} = {op(operand, operand)}")
+    condition_chain = "AND ".join(f"(x {po} {operand}) " for po, operand in zip(operators, operands))
+    for op, operand, po in zip(operations, operands, operators):
+        print(f"{operand + 1} {po} {operand} = {op(operand + 1, operand)}")
+        print(f"{operand - 1} {po} {operand} = {op(operand - 1, operand)}")
+        print(f"{operand} {po} {operand} = {op(operand, operand)}")
 
-    #    print(f"(lambda x: {condition_chain})({operand + 1}) = {conditional(operand+1)}")
-    #    print(f"(lambda x: {condition_chain})({operand - 1}) = {conditional(operand-1)}")
-    #    print(f"(lambda x: {condition_chain})({operand}) = {conditional(operand)}")
+        print(f"(lambda x: {condition_chain})({operand + 1}) = {conditional(operand+1)}")
+        print(f"(lambda x: {condition_chain})({operand - 1}) = {conditional(operand-1)}")
+        print(f"(lambda x: {condition_chain})({operand}) = {conditional(operand)}")
 
     return conditional, conditionals
 
@@ -62,6 +62,7 @@ def arguments():
                         nargs='+',
                         help="Condition for sequences of the form '[>|<|>=|<=]\d+'",
                         default=None)
+    parser.add_argument("--unique", action='store_true', default=False)
 
     args = parser.parse_args()
     args.condition, _ = _construct_conditional(args.assertion)
@@ -131,26 +132,38 @@ if __name__ == "__main__":
                 filename = outpath / ID + f'.{i}.fasta'
                 i += 1
             return open(filename, 'w')
+
+    if args.unique:
+        previous = set()
     
-    lens = set()
     for i, (header, sequence) in enumerate(spliterator, 1):
         total += 1
         l = len(sequence.replace('\n', ''))
-        ID = header.lstrip(">").rstrip().split(" ")[0].replace("/", "-").replace("|", "__")
+        ID = header.lstrip(">").rstrip().split("__")[0]#.replace("/", "-").replace("|", "__")
         if args.condition(l):
-            outfile = emit_outfile(args.o, ID)
-            print(header, file=outfile)
-            print(sequence, file=outfile)
-            if not args.filter_only:
-                outfile.close()
-            lens.add(l)
+            if args.unique and sequence not in previous:
+                outfile = emit_outfile(args.o, ID)
+                print(f">{ID}", file=outfile)
+                print(sequence, file=outfile)
+                if not args.filter_only:
+                    outfile.close()
+                previous.add(sequence)
+                dumped += 1
+            elif not args.unique:
+                outfile = emit_outfile(args.o, ID)
+                print(f">{ID}", file=outfile)
+                print(sequence, file=outfile)
+                if not args.filter_only:
+                    outfile.close()
+                dumped += 1
+
+
         if i and not i % 10000:
             print(".", end='', flush=True)
-        dumped += 1
 
     if args.filter_only:
         outfile.close()
 
-    print(f"{clear}Done! Dumped {dumped}/{total} separate sequences into {args.o}.")
+    print(f"{clear}Done! Dumped {dumped}/{total}{' (unique) ' if args.unique else ' '}sequences into {args.o}.")
     #print(max(lens))
     #print(lens)
