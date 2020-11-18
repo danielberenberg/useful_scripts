@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 
 # see adjacency.py
-from adjacency import Composer, AdjacencyMatrixMaker
+from biotoolbox.adjacency import Composer, AdjacencyMatrixMaker
 
 def arguments():
     parser = argparse.ArgumentParser("Invokes matshow on a distance or probability map.")
