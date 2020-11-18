@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 
 """
-Split or filter a FASTA file 
+Split or filter a 
 """
 
+import io
 import re
 import sys
 import pathlib
+import secrets 
 import operator
 import argparse
+import textwrap
+import itertools
 
 clear = f"\r{100 * ' '}\r"
 FASTA_STOP_CODON = '*'
@@ -28,26 +32,13 @@ def _construct_conditional(conditions):
         return lambda x: True, []
     conditionals = []
     op2op = {'>': operator.gt, '<': operator.lt, '>=': operator.ge, '<=': operator.le} 
-    po5po = {v: k for v, k in op2op.items()}
-
-    operators, operands = zip(*conditions)
-    operations = list(map(lambda op: op2op[op], operators))
+    operations, operands = zip(*conditions)
+    operations = list(map(lambda op: op2op[op], operations))
     operands   = list(map(int, operands))
 
     def conditional(X):
         evaluated = [op(X, operand) for op, operand in zip(operations, operands)]
         return all(evaluated)
-
-    condition_chain = "AND ".join(f"(x {po} {operand}) " for po, operand in zip(operators, operands))
-    for op, operand, po in zip(operations, operands, operators):
-        print(f"{operand + 1} {po} {operand} = {op(operand + 1, operand)}")
-        print(f"{operand - 1} {po} {operand} = {op(operand - 1, operand)}")
-        print(f"{operand} {po} {operand} = {op(operand, operand)}")
-
-        print(f"(lambda x: {condition_chain})({operand + 1}) = {conditional(operand+1)}")
-        print(f"(lambda x: {condition_chain})({operand - 1}) = {conditional(operand-1)}")
-        print(f"(lambda x: {condition_chain})({operand}) = {conditional(operand)}")
-
     return conditional, conditionals
 
 def arguments():
@@ -62,7 +53,6 @@ def arguments():
                         nargs='+',
                         help="Condition for sequences of the form '[>|<|>=|<=]\d+'",
                         default=None)
-    parser.add_argument("--unique", action='store_true', default=False)
 
     args = parser.parse_args()
     args.condition, _ = _construct_conditional(args.assertion)
@@ -76,7 +66,7 @@ def arguments():
 
     return args
 
-def fasta_reader(handle, width=None, strip_prefix=False):
+def fasta_reader(handle, width=None):
     """
     Reads a FASTA file, yielding header, sequence pairs for each sequence recovered
     args:
@@ -89,8 +79,6 @@ def fasta_reader(handle, width=None, strip_prefix=False):
         :None
     """
     FASTA_STOP_CODON = "*"
-    FASTA_START_CHAR = ">"
-
     import io, textwrap, itertools
 
     handle = handle if isinstance(handle, io.TextIOWrapper) else open(handle, 'r')
@@ -99,8 +87,6 @@ def fasta_reader(handle, width=None, strip_prefix=False):
         for is_header, group in itertools.groupby(handle, lambda line: line.startswith(">")):
             if is_header:
                 header = group.__next__().strip()
-                if strip_prefix:
-                    header = header.lstrip(FASTA_START_CHAR)
             else:
                 seq    = ''.join(line.strip() for line in group).strip().rstrip(FASTA_STOP_CODON)
                 if width is not None:
@@ -111,8 +97,6 @@ def fasta_reader(handle, width=None, strip_prefix=False):
             handle.close()
 
 if __name__ == "__main__":
-    import itertools
-
     args = arguments()
     spliterator = fasta_reader(args.i)
     if not args.allow_stop_codons:
@@ -133,37 +117,20 @@ if __name__ == "__main__":
                 i += 1
             return open(filename, 'w')
 
-    if args.unique:
-        previous = set()
-    
     for i, (header, sequence) in enumerate(spliterator, 1):
         total += 1
-        l = len(sequence.replace('\n', ''))
-        ID = header.lstrip(">").rstrip().split("__")[0]#.replace("/", "-").replace("|", "__")
-        if args.condition(l):
-            if args.unique and sequence not in previous:
-                outfile = emit_outfile(args.o, ID)
-                print(f">{ID}", file=outfile)
-                print(sequence, file=outfile)
-                if not args.filter_only:
-                    outfile.close()
-                previous.add(sequence)
-                dumped += 1
-            elif not args.unique:
-                outfile = emit_outfile(args.o, ID)
-                print(f">{ID}", file=outfile)
-                print(sequence, file=outfile)
-                if not args.filter_only:
-                    outfile.close()
-                dumped += 1
-
-
-        if i and not i % 10000:
-            print(".", end='', flush=True)
+        if not args.condition(len(sequence.replace('\n', ''))):
+            continue
+        ID = header.lstrip(">").rstrip().split(" ")[0].replace("/", "-").replace("|", "__")
+        outfile = emit_outfile(args.o, ID)
+        print(header, file=outfile)
+        print(sequence, file=outfile)
+        print(f"{clear}[{i}] {outfile.name}", end='', flush=True)
+        if not args.filter_only:
+            outfile.close()
+        dumped += 1
 
     if args.filter_only:
         outfile.close()
 
-    print(f"{clear}Done! Dumped {dumped}/{total}{' (unique) ' if args.unique else ' '}sequences into {args.o}.")
-    #print(max(lens))
-    #print(lens)
+    print(f"{clear}Done! Dumped {dumped}/{total} separate fasta files into {args.o}.")
