@@ -87,7 +87,8 @@ class DistanceMapBuilder:
             contact_maps.with_chain(chain_name)
             self.speak(f"\nProcessing chain {chain_name}")
 
-            if chain['seqres-seq'] is not None and len(chain['seqres-seq']) > 0:
+            #if chain['seqres-seq'] is not None and len(chain['seqres-seq']) > 0:
+            if False:
                 contact_maps.with_method_for_chain(chain_name, ALIGNED_BY_SEQRES)
                 seqres_seq = chain['seqres-seq']
                 atom_seq   = chain['atom-seq']

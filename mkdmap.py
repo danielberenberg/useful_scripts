@@ -96,7 +96,9 @@ if __name__ == '__main__':
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         dmap_info = filter_map_output(make_distance_map(pdb, gzip_compressed=False, atom=atom))
-
+    
+    # extract only the first contact map for a specific chain!!!!!!
+    # needs to be changed to emit all chains ...
     chain = list(dmap_info.keys())[0]
     dmap = np.array(dmap_info[chain]['contact-map'])
     xyz  = np.array(dmap_info[chain]['xyz'])
