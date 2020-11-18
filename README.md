@@ -1,7 +1,17 @@
 # Useful scripts
-- Collection of scripts I use frequently
-- Generally targeted for native Python modules
 
-# Current scripts
-- `split_fasta.py` for splitting, filtering, and writing out FASTA files.
-  - TODO - object oriented & aggregate files recursively from directory?
+- "General" purpose scripts
+
+# Requirements
+```
+# there's probably something unneccessary or missing here
+pip install numpy scipy matplotlib torch Biopython 
+```
+
+# What's inside
+- `mkdmap.py` - make a distance map from pdb file
+- `split_fasta.py` - split, combine, and/or filter sequences by length from a fasta file
+- `plot_map.py` - plots a contact map
+
+- potentially more to come
+
