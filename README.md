@@ -1,6 +1,6 @@
 # Useful scripts
 
-- "General" purpose scripts
+- "General" purpose utility scripts 
 
 # Requirements
 ```
