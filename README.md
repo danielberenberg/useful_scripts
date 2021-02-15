@@ -4,7 +4,6 @@
 
 # Requirements
 ```
-# there's probably something unneccessary or missing here
 pip install numpy scipy matplotlib torch Biopython 
 ```
 
