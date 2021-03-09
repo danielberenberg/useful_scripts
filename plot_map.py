@@ -16,7 +16,7 @@ import torch
 import matplotlib.pyplot as plt
 
 # see adjacency.py
-from biotoolbox.adjacency import Composer, AdjacencyMatrixMaker, CoordLoader
+from .biotoolbox.adjacency import Composer, AdjacencyMatrixMaker, CoordLoader
 
 def arguments():
     parser = argparse.ArgumentParser("Invokes matshow on a distance or probability map.")

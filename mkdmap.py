@@ -18,8 +18,8 @@ from collections import defaultdict
 import torch
 import numpy as np
 
-from biotoolbox.structure_file_reader import build_structure_container_for_pdb
-from biotoolbox.contact_map_builder   import DistanceMapBuilder
+from .biotoolbox.structure_file_reader import build_structure_container_for_pdb
+from .biotoolbox.contact_map_builder   import DistanceMapBuilder
 
 def make_distance_map(pdbfile, gzip_compressed=False, atom="CA"):
     """
