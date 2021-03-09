@@ -8,6 +8,7 @@ Split or filter a
 import io
 import re
 import sys
+import gzip
 import pathlib
 import secrets 
 import operator
@@ -66,6 +67,10 @@ def arguments():
 
     return args
 
+def is_gzipped(filepath):
+    with open(filepath, 'rb') as f:
+        return f.read(2) == b'\x1f\x8b'
+
 def fasta_reader(handle, width=None):
     """
     Reads a FASTA file, yielding header, sequence pairs for each sequence recovered
@@ -80,8 +85,10 @@ def fasta_reader(handle, width=None):
     """
     FASTA_STOP_CODON = "*"
     import io, textwrap, itertools
+    
+    if not isinstance(handle, io.TextIOWrapper):
+        handle = gzip.open(handle, 'rt') if is_gzipped(handle) else open(handle, 'r')
 
-    handle = handle if isinstance(handle, io.TextIOWrapper) else open(handle, 'r')
     width  = width if isinstance(width, int) and width > 0 else None
     try:
         for is_header, group in itertools.groupby(handle, lambda line: line.startswith(">")):
